@@ -1,0 +1,38 @@
+BITS 16
+ORG 0x7C00          ; Boot sector is loaded at memory address 0x7C00
+
+start:
+    ; Set up stack
+    cli             ; Disable interrupts
+    xor ax, ax      ; Zero out AX register
+    mov ds, ax      ; Set data segment to 0
+    mov es, ax      ; Set extra segment to 0
+    mov ss, ax      ; Set stack segment to 0
+    mov sp, 0x7C00  ; Set stack pointer (grows downward)
+    sti             ; Enable interrupts
+
+    ; Print message
+    mov si, message
+    call print_string
+
+    ; Halt the system
+    hlt
+    jmp $
+
+; Print string subroutine
+print_string:
+    mov ah, 0x0E  ; BIOS teletype function
+.loop:
+    lodsb          ; Load next byte from string (SI)
+    or al, al      ; Check if end of string (NULL byte)
+    jz done        ; If zero, return
+    int 0x10       ; Call BIOS interrupt to print character
+    jmp .loop
+done:
+    ret
+
+message db "Hello, OS!", 0  ; Message to print
+
+; Boot sector padding
+times 510-($-$$) db 0  ; Fill the remaining space with zeros
+dw 0xAA55              ; Boot sector signature (magic number)
