@@ -1,26 +1,36 @@
-#define VGA_ADDRESS 0xB8000
-#define WHITE_ON_BLACK 0x0F
+#include "keyboard.h"
+#include "memory.h"
 
-void clear_screen() {
-    char* vga = (char*)VGA_ADDRESS;
-    for (int i = 0; i < 80 * 25 * 2; i += 2) {
-        vga[i] = ' ';
-        vga[i + 1] = WHITE_ON_BLACK;
-    }
-}
-
-void print(const char* message) {
-    char* vga = (char*)VGA_ADDRESS;
+void shell() {
+    char input[256];
     int index = 0;
-    while (message[index]) {
-        vga[index * 2] = message[index];
-        vga[index * 2 + 1] = WHITE_ON_BLACK;
-        index++;
+    
+    print("Simple Shell > ");
+    
+    while (1) {
+        char key = read_key();  // Blocking input
+        if (key == '\n') {
+            input[index] = 0;
+            index = 0;
+            print("\n");
+            if (strcmp(input, "clear") == 0) {
+                clear_screen();
+            } else {
+                print("Unknown command\n");
+            }
+            print("Simple Shell > ");
+        } else {
+            input[index++] = key;
+            print_char(key);
+        }
     }
 }
 
 void kernel_main() {
     clear_screen();
-    print("Hello, Kernel World!");
-    while (1);  // Infinite loop to prevent exit
+    print("Welcome to the custom kernel!\n");
+
+    init_keyboard();
+    
+    shell();
 }
