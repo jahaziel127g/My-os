@@ -1,14 +1,15 @@
 #include "fs.h"
 #include "task.h"
+#include "disk.h"
 
 void task1() {
     print("Task 1 running...\n");
-    while (1) task_switch();
+    while (1);
 }
 
 void task2() {
     print("Task 2 running...\n");
-    while (1) task_switch();
+    while (1);
 }
 
 void shell() {
@@ -31,10 +32,17 @@ void shell() {
             } else if (strncmp(input, "touch ", 6) == 0) {
                 fs_create(input + 6);
             } else if (strncmp(input, "echo ", 5) == 0) {
-                fs_write(0, input + 5); // Writing to first file
+                fs_write(0, input + 5);
             } else if (strcmp(input, "read") == 0) {
                 print(fs_read(0));
                 print("\n");
+            } else if (strncmp(input, "diskread", 8) == 0) {
+                char buffer[512];
+                ata_read_sector(0, buffer);
+                print(buffer);
+                print("\n");
+            } else if (strncmp(input, "diskwrite ", 10) == 0) {
+                ata_write_sector(0, input + 10);
             } else {
                 print("Unknown command\n");
             }
