@@ -24,9 +24,12 @@ typedef struct {
 
 PageDirectory* current_directory;
 
-void switch_page_directory(PageDirectory* dir) {
-    current_directory = dir;
+void load_page_directory(PageDirectory* dir) {
     asm volatile("mov %0, %%cr3" :: "r"(dir->physical_tables));
+    unsigned int cr0;
+    asm volatile("mov %%cr0, %0" : "=r"(cr0));
+    cr0 |= 0x80000000;  // Enable paging
+    asm volatile("mov %0, %%cr0" :: "r"(cr0));
 }
 
 PageDirectory* create_page_directory() {
@@ -35,10 +38,11 @@ PageDirectory* create_page_directory() {
         dir->tables[i] = 0;
         dir->physical_tables[i] = 0;
     }
+
     return dir;
 }
 
 void setup_paging() {
     current_directory = create_page_directory();
-    switch_page_directory(current_directory);
+    load_page_directory(current_directory);
 }
