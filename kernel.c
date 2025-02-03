@@ -1,6 +1,7 @@
 #include "fs.h"
 #include "task.h"
 #include "disk.h"
+#include "memory.h"
 
 void task1() {
     print("Task 1 running...\n");
@@ -59,8 +60,9 @@ void kernel_main() {
     clear_screen();
     print("Welcome to the custom kernel!\n");
 
-    fs_init();
-    task_init();
+    setup_paging();  // Enable virtual memory
+    fs_init();       // Initialize filesystem
+    task_init();     // Initialize multitasking
 
     task_create(task1);
     task_create(task2);
