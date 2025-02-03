@@ -22,34 +22,23 @@ typedef struct {
     unsigned int physical_tables[PAGE_ENTRIES];
 } PageDirectory;
 
-PageDirectory* kernel_directory;
 PageDirectory* current_directory;
 
-void load_page_directory(PageDirectory* dir) {
+void switch_page_directory(PageDirectory* dir) {
+    current_directory = dir;
     asm volatile("mov %0, %%cr3" :: "r"(dir->physical_tables));
-    unsigned int cr0;
-    asm volatile("mov %%cr0, %0" : "=r"(cr0));
-    cr0 |= 0x80000000;  // Enable paging
-    asm volatile("mov %0, %%cr0" :: "r"(cr0));
+}
+
+PageDirectory* create_page_directory() {
+    PageDirectory* dir = (PageDirectory*)KERNEL_MEM;
+    for (int i = 0; i < PAGE_ENTRIES; i++) {
+        dir->tables[i] = 0;
+        dir->physical_tables[i] = 0;
+    }
+    return dir;
 }
 
 void setup_paging() {
-    kernel_directory = (PageDirectory*)KERNEL_MEM;
-    for (int i = 0; i < PAGE_ENTRIES; i++) {
-        kernel_directory->tables[i] = 0;
-        kernel_directory->physical_tables[i] = 0;
-    }
-
-    PageTable* table = (PageTable*)(KERNEL_MEM + sizeof(PageDirectory));
-    for (int i = 0; i < PAGE_ENTRIES; i++) {
-        table->entries[i].present = 1;
-        table->entries[i].rw = 1;
-        table->entries[i].user = 0;
-        table->entries[i].frame = i;
-    }
-
-    kernel_directory->tables[0] = table;
-    kernel_directory->physical_tables[0] = (unsigned int)table | 3;
-
-    load_page_directory(kernel_directory);
+    current_directory = create_page_directory();
+    switch_page_directory(current_directory);
 }
