@@ -11,5 +11,5 @@ void keyboard_callback() {
 }
 
 void init_keyboard() {
-    register_interrupt_handler(33, keyboard_callback);  // IRQ1 = 33
+    register_interrupt_handler(35, keyboard_callback);  // IRQ1 = 33
 }
